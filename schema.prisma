@@ -1,0 +1,71 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["jsonProtocol"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL") // uses connection pooling
+  directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
+}
+
+model User {
+  id                     Int        @id @default(autoincrement())
+  username               String     @unique
+  password               String
+  type                   String // buyer/seller/admin
+  name                   String?
+  surname                String?
+  money_balance          Int?       @default(0) // for buyers
+  company_name           String? // for sellers
+  bank_account           String? // for sellers
+  // Shipping Address
+  contact_person_name    String?
+  street                 String?
+  apartment_suite_number String?
+  city                   String?
+  state                  String?
+  zip_code               String?
+  mobile_number          String?
+  // relationships
+  purchases              Purchase[]
+  products               Product[]  @relation("UserProducts")
+}
+
+model Product {
+  id        Int        @id @default(autoincrement())
+  year      Int
+  make      String
+  model     String
+  type      String
+  price     Float
+  distance  Float
+  image_url String?
+  isSold    Boolean    @default(false)
+  seller_id Int // foreign key referencing User.id
+  // relationship
+  seller    User       @relation("UserProducts", fields: [seller_id], references: [id])
+  purchases Purchase[]
+}
+
+model Purchase {
+  id            Int      @id @default(autoincrement())
+  buyer_id      Int // foreign key referencing User.id
+  product_id    Int // foreign key referencing Product.id
+  purchase_date DateTime @default(now())
+  // relationships
+  buyer         User     @relation(fields: [buyer_id], references: [id])
+  product       Product  @relation(fields: [product_id], references: [id])
+}
+
+// model Location {
+//   id      Int     @id @default(autoincrement())
+//   city    String
+//   country String
+// }
